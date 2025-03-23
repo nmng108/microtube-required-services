@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # only used for test project or initial phases of a project
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true

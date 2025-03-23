@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_DIR" value="/opt/app/logs"/>
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>
+                %magenta(%date{STRICT}) %mdc{traceId} %mdc{spanId} [%-21thread] %highlight(%-5level) %yellow(%-25logger{25}) %4line %-10method : %msg%throwable{30}%n
+            </pattern>
+        </layout>
+    </appender>
+    <appender name="fileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/working.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{STRICT} %p %C{25} %L %M - %t : %m%n</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily and when the file reaches <maxFileSize> Megabytes -->
+            <fileNamePattern>${LOG_DIR}/archived/log.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>500MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+<!--    <appender name="jsonFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <file>${LOG_DIR}/working-json.log</file>-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            <fileNamePattern>${LOG_DIR}/json-archived/json-log.%d{yyyy-MM-dd}.%i.gz-->
+<!--            </fileNamePattern>-->
+<!--            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">-->
+<!--                <maxFileSize>500MB</maxFileSize>-->
+<!--            </timeBasedFileNamingAndTriggeringPolicy>-->
+<!--        </rollingPolicy>-->
+<!--        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">-->
+<!--            <providers>-->
+<!--                <timestamp>-->
+<!--                    <fieldName>createdDate</fieldName>-->
+<!--                    <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>-->
+<!--                </timestamp>-->
+<!--                <mdc/>-->
+<!--                <pattern>-->
+<!--                    <pattern>-->
+<!--                        {-->
+<!--                            "hostname": "${HOSTNAME:-unknown}",-->
+<!--                            "application-name": "${applicationName}",-->
+<!--                            "level": "%level",-->
+<!--                            "class":"%C{25}",-->
+<!--                            "method": "%M",-->
+<!--                            "line": "%L",-->
+<!--                            "message": "%message"-->
+<!--                        }-->
+<!--                    </pattern>-->
+<!--                </pattern>-->
+<!--                <logstashMarkers/>-->
+<!--                <arguments/>-->
+<!--                <stackTrace/>-->
+<!--            </providers>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+    <include resource="fluency.xml"/> <!-- Provide the "fluency" appender-->
+
+    <!-- LOG everything at INFO level -->
+    <root level="info">
+        <appender-ref ref="stdout"/>
+<!--        <appender-ref ref="fileAppender"/>-->
+    </root>
+
+    <logger name="nmng108.base.restful" level="info" additivity="false">
+        <appender-ref ref="stdout"/>
+<!--        <appender-ref ref="fileAppender"/>-->
+<!--        <appender-ref ref="syncFluency"/>-->
+    </logger>
+    <logger name="org.hibernate" level="info">
+        <appender-ref ref="stdout"/>
+<!--        <appender-ref ref="fileAppender"/>-->
+<!--        <appender-ref ref="fluency"/>-->
+    </logger>
+    <!--   <logger name="org.hibernate.SQL" level="debug">-->
+    <!--       <appender-ref ref="stdout"/>-->
+    <!--    </logger>-->
+
+</configuration>

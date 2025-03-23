@@ -1,0 +1,26 @@
+#logging:
+#  # Only set this in case you want to put logging config file to a directory other than the working dir "./" or "./config"
+#  config: ${LOGGING_CONFIG_FILEPATH:logback-spring.xml}
+
+# Production environment options
+management:
+  server:
+    address: ${ACTUATOR_HOST:localhost} # should equal 0.0.0.0 if running in container
+    port: ${ACTUATOR_PORT:8081} # Set to -1 to block access to management endpoints
+  endpoints:
+    web:
+      base-path: /actuator
+
+  tracing:
+    sampling:
+      probability: 1
+  #  otlp:
+  #    metrics:
+  #      export:s
+  #        url: "https://localhost:4318/v1/metrics"
+  zipkin:
+    tracing:
+      export:
+        enabled: ${ENABLE_ZIPKIN:false}
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+      encoding: json

@@ -1,0 +1,26 @@
+<included>
+    <springProperty scope="context" name="FLUENTD_HOST" source="fluentd.host" defaultValue="localhost"/>
+    <springProperty scope="context" name="FLUENTD_PORT" source="fluentd.port" defaultValue="24224"/>
+
+    <appender name="syncFluency" class="ch.qos.logback.more.appenders.FluencyLogbackAppender">
+        <tag>spring-boot-restful</tag>
+        <remoteHost>${FLUENTD_HOST}</remoteHost>
+        <port>${FLUENTD_PORT}</port>
+        <useEventTime>true</useEventTime>
+        <encoder>
+            <pattern><![CDATA[%msg%throwable{30}]]></pattern>
+        </encoder>
+    </appender>
+    <appender name="fluency" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- Max queue size of logs which is waiting to be sent (When it reach to the max size, the log will be disappeared). -->
+        <queueSize>999</queueSize>
+        <!-- Never block when the queue becomes full. -->
+        <neverBlock>true</neverBlock>
+        <!-- The default maximum queue flush time allowed during appender stop.
+             If the worker takes longer than this time it will exit, discarding any remaining items in the queue.
+             10000 millis
+         -->
+        <maxFlushTime>10000</maxFlushTime>
+        <appender-ref ref="syncFluency" />
+    </appender>
+</included>
