@@ -11,40 +11,40 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-public class ForbiddenException extends CustomHttpException {
-    private static final HttpStatus DEFAULT_HTTP_STATUS = HttpStatus.FORBIDDEN;
-    private static final ErrorCode DEFAULT_ERROR_CODE = ErrorCode.E00011; // change this
+public class ResourceNotFoundException extends CustomHttpException {
+    private static final HttpStatus DEFAULT_HTTP_STATUS = HttpStatus.BAD_REQUEST;
+    private static final ErrorCode DEFAULT_ERROR_CODE = ErrorCode.E00004;
 
     /**
-     * Apply the default error code: {@link ErrorCode#E00011}.
+     * Apply the default error code: {@link ErrorCode#E00004}.
      */
-    public ForbiddenException() {
+    public ResourceNotFoundException() {
         this(DEFAULT_ERROR_CODE);
     }
 
     /**
-     * Apply the default error code: {@link ErrorCode#E00011}.
+     * Apply the default error code: {@link ErrorCode#E00004}.
      */
-    public ForbiddenException(String message) {
+    public ResourceNotFoundException(String message) {
         this(DEFAULT_ERROR_CODE, message);
     }
 
-    public ForbiddenException(ErrorCode errorCode) {
+    public ResourceNotFoundException(ErrorCode errorCode) {
         this(errorCode, (List<String>) null);
     }
 
-    public ForbiddenException(ErrorCode errorCode, String message) {
+    public ResourceNotFoundException(ErrorCode errorCode, String message) {
         this(errorCode, Collections.singletonList(message));
     }
 
-    public ForbiddenException(ErrorCode errorCode, @Nullable List<String> details) {
+    public ResourceNotFoundException(ErrorCode errorCode, @Nullable List<?> details) {
         this(errorCode, details, null);
     }
 
     /**
      * Constructor with only errorCode and message.
      */
-    public ForbiddenException(ErrorCode errorCode, @Nullable Map<Object, String> details) {
+    public ResourceNotFoundException(ErrorCode errorCode, @Nullable Map<Object, String> details) {
         this(errorCode, details, null);
     }
 
@@ -53,7 +53,7 @@ public class ForbiddenException extends CustomHttpException {
      *
      * @param details {@link List}-structured.
      */
-    public ForbiddenException(ErrorCode errorCode, @Nullable List<String> details, @Nullable HttpHeaders headers) {
+    public ResourceNotFoundException(ErrorCode errorCode, @Nullable List<?> details, @Nullable HttpHeaders headers) {
         super(DEFAULT_HTTP_STATUS, errorCode, details, headers);
     }
 
@@ -62,7 +62,7 @@ public class ForbiddenException extends CustomHttpException {
      *
      * @param details {@link Map}-structured.
      */
-    public ForbiddenException(ErrorCode errorCode, @Nullable Map<Object, String> details, @Nullable HttpHeaders headers) {
+    public ResourceNotFoundException(ErrorCode errorCode, @Nullable Map<Object, String> details, @Nullable HttpHeaders headers) {
         super(DEFAULT_HTTP_STATUS, errorCode, details, headers);
     }
 }

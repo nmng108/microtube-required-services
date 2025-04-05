@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
@@ -13,14 +12,14 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableAspectJAutoProxy
 @Aspect
 @Slf4j
-public class AopConfig {
+public class AopConfiguration {
     /**
      * An example of AOP feature usage.
      *
      * In reality, there's no need to always print log for every caught exception, especially relating to validation.
      * Instead, this would be better if we only put log to necessary handlers.
      */
-    @Before("execution(* nmng108.base.restful.exception.handler.*.*(..))")
+    @Before("execution(* nmng108.microtube.processor.exception.handler.*.*(..))")
     public void beforeExceptionHandler(JoinPoint joinPoint) {
         Exception e = (Exception) joinPoint.getArgs()[0];
         log.info("(Handler method: {} - Exception: {}) {}", joinPoint.getSignature().toShortString(), e.getClass().getCanonicalName(), e.getMessage());

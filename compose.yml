@@ -1,39 +1,49 @@
+name: microtube
 services:
   server:
-    image: ${BACKEND_IMAGE:-registry.docker.local/spring-boot-3-restful:latest}
+    image: ${BACKEND_IMAGE:-registry.local/microtube/video-processing-service:latest}
     volumes:
-      - ./data/logs:/opt/app/logs
+      - ./log:/opt/app/logs
+      - ./tmp/:/opt/app/tmp
     networks:
       - default
       - logging-network
     ports:
       - ${PUBLISHED_PORT:-8080}:8080
-    depends_on:
-      mysql.db:
-        condition: service_healthy
+      - name: actuator
+        host_ip: 127.0.0.1
+        target: 8081
+        published: ${ACTUATOR_PORT:-8081}
+        app_protocol: http
+#    depends_on:
+#      mysql.db:
+#        condition: service_healthy
     healthcheck:
       test: sh -c "curl -f http://localhost:8080${SERVER_CONTEXT_PATH-}/healthcheck"
       interval: 20s
       timeout: 10s
       retries: 10
-    develop:
-      watch:
-        - action: rebuild
-          path: .
     environment:
       # Application configs
       SPRING_ACTIVES_PROFILE: prod
       SERVER_CONTEXT_PATH: ${SERVER_CONTEXT_PATH-}
+      ACTUATOR_HOST: 0.0.0.0
+      ACTUATOR_PORT: 8081
 #      LOGGING_CONFIG_FILEPATH=/app/config/logback-spring.xml
       JWT_SECRET: {JWT_SECRET-}
       # Database configs (may put this to .env file)
-      MAIN_DB_URL: ${DATABASE_URL:-jdbc:mysql://mysql.db:3306/MICROTUBE}
+      MAIN_DB_URL: ${MAIN_DATABASE_URL:-jdbc:mysql://mysql.db:3306/MICROTUBE}
       MAIN_DB_USERNAME: ${DATABASE_USERNAME:-dbuser}
       MAIN_DB_PASSWORD: ${DATABASE_PASSWORD:-123}
+      OBJECT_STORE_URL: ${OBJECT_STORE_URL:-http://minio:9000}
+      OBJECT_STORE_USERNAME: ${OBJECT_STORE_USERNAME:-admin}
+      OBJECT_STORE_PASSWORD: ${OBJECT_STORE_PASSWORD:-minioadmin}
+      OBJECT_STORE_BUCKET_HLS: ${OBJECT_STORE_BUCKET_HLS:-hls}
+      OBJECT_STORE_BUCKET_USER_STORE: ${OBJECT_STORE_BUCKET_USER_STORE:-user-store}
       FLUENTD_HOST: ${FLUENTD_HOST:-fluentd}
       FLUENTD_PORT: ${FLUENTD_PORT:-24224}
       ENABLE_ZIPKIN: false
-      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://127.0.0.1:9411/api/v2/spans}
 #    logging:
 #      driver: fluentd
 #      options:

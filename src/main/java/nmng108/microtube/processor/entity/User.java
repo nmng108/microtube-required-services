@@ -3,6 +3,7 @@ package nmng108.microtube.processor.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import nmng108.microtube.processor.util.constant.Constants;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,28 +14,38 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "users", schema = Constants.DATABASE_NAME)
+@Table(name = "USER", schema = Constants.DATABASE_NAME)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-//@EntityListeners(AuditingEntityListener.class)
 public class User extends Accountable implements UserDetails {
-    @Column(nullable = false)
+    @Column(name = "ID", nullable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
 
-    @Column( unique = true, length = 16, nullable = false)
-    @Size(min = 3, max = 50)
-    private String username;
-    @Column(length = 150, nullable = false)
+    @Column(name = "USERNAME", unique = true, length = 20, nullable = false)
+    @Size(min = 3, max = 20)
+    String username;
+    @Column(name = "PASSWORD", length = 150, nullable = false)
     @Size(min = 3, max = 150)
-    private String password;
-    @Column(length = 300, nullable = true)
-    @Size(min = 3, max = 150)
-    private String email;
+    String password;
+    @Column(name = "NAME", length = 255, nullable = false)
+    @Size(min = 3, max = 255)
+    String name;
+    @Column(name = "EMAIL", length = 100, nullable = false)
+    @Size(min = 3, max = 100)
+    String email;
+    @Column(name = "PHONE_NUMBER", length = 20)
+    String phoneNumber;
+    @Column(name = "ADDITIONAL_INFO")
+    String additionalInfo;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER)
+    Channel channel;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

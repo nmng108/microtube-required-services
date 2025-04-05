@@ -13,17 +13,17 @@ import java.util.Map;
 @Getter
 public class UnauthorizedException extends CustomHttpException {
     private static final HttpStatus DEFAULT_HTTP_STATUS = HttpStatus.UNAUTHORIZED;
-    private static final ErrorCode DEFAULT_ERROR_CODE = ErrorCode.E00002; // change this
+    private static final ErrorCode DEFAULT_ERROR_CODE = ErrorCode.E00010; // change this
 
     /**
-     * Apply the default error code: {@link ErrorCode#E00002}.
+     * Apply the default error code: {@link ErrorCode#E00010}.
      */
     public UnauthorizedException() {
         this(DEFAULT_ERROR_CODE);
     }
 
     /**
-     * Apply the default error code: {@link ErrorCode#E00002}.
+     * Apply the default error code: {@link ErrorCode#E00010}.
      */
     public UnauthorizedException(String message) {
         this(DEFAULT_ERROR_CODE, message);

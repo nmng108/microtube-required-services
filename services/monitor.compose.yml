@@ -1,3 +1,4 @@
+name: microtube
 services:
   zipkin:
     image: openzipkin/zipkin
@@ -5,6 +6,5 @@ services:
       - "9411:9411"
 
 networks:
-  default:
   monitoring-network:
     name: monitoring-network

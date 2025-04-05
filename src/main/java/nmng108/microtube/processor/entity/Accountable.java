@@ -18,7 +18,9 @@ import java.time.LocalDateTime;
 @SuperBuilder
 @Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Accountable {
+public abstract class Accountable {
+    // TODO: find solution to store UTC date time (instead of system data time)
+
     @CreatedBy
     @Column(name = "CREATED_BY")
     Long createdBy;

@@ -8,16 +8,15 @@ import nmng108.microtube.processor.util.constant.Constants;
 import java.util.Objects;
 
 /**
- * Defines all actions that user can do with application resources/entities (defined in the APP_ENTITY table).
- * Common actions are "READ", "CREATE", "UPDATE", "DELETE".
+ * Represents every resource defined in this application.
  */
 @Entity
-@Table(name = "APP_ACTION", schema = Constants.DATABASE_NAME)
+@Table(name = "SYS_ENTITY", schema = Constants.DATABASE_NAME)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Getter @Setter
-public class AppAction extends Accountable {
+public class SysEntity extends Accountable {
     @Column(name = "ID", nullable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,12 +34,23 @@ public class AppAction extends Accountable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AppAction appEntity = (AppAction) o;
+        SysEntity appEntity = (SysEntity) o;
         return id != 0 && appEntity.id != 0 && id == appEntity.id;
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "AppEntity{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", nameAscii='" + nameAscii + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

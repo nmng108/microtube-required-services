@@ -15,6 +15,9 @@ public enum ErrorCode {
     E00007("E00007"),
     E00008("E00008"),
 
+    E00010("E00010"),
+    E00011("E00011"),
+
     E20001("E20001");
 
 //    UNAUTHORIZED(3, "Unauthorized"),

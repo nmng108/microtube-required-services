@@ -1,3 +1,4 @@
+name: microtube
 services:
   glowroot:
     image: glowroot/glowroot-central:0.14.2

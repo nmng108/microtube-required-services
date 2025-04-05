@@ -11,7 +11,7 @@
 ARG GLOWROOT_COLLECTOR_ADDRESS="http://localhost:8181"
 
 # Create a stage for resolving and downloading dependencies.
-FROM eclipse-temurin:21-jdk-jammy AS deps
+FROM eclipse-temurin:21-jdk-alpine-3.21 AS deps
 
 WORKDIR /build
 
@@ -61,22 +61,25 @@ RUN java -Djarmode=layertools -jar target/app.jar extract --destination target/e
 
 # Create a new stage for running the application in development (local) environment.
 
-FROM extract AS development
+FROM eclipse-temurin:21-jre-alpine-3.21 AS development
+RUN apk --update add ffmpeg && \
+    apk cache clean && rm -rf /var/cache/apk/*
 
 WORKDIR /build
 
-RUN cp -r /build/target/extracted/dependencies/. ./
-RUN cp -r /build/target/extracted/spring-boot-loader/. ./
-RUN cp -r /build/target/extracted/snapshot-dependencies/. ./
-RUN cp -r /build/target/extracted/application/. ./
-COPY glowroot/ glowroot/
+COPY --from=extract /build/target/extracted/dependencies/ ./
+COPY --from=extract /build/target/extracted/spring-boot-loader/ ./
+COPY --from=extract /build/target/extracted/snapshot-dependencies/ ./
+COPY --from=extract /build/target/extracted/application/ ./
+COPY ./glowroot/ ./glowroot/
 
 # Enable debugger
 ARG GLOWROOT_COLLECTOR_ADDRESS
 ENV JAVA_TOOL_OPTIONS \
-    -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 \
-    -javaagent:glowroot/glowroot.jar \
-    -Dglowroot.collector.address=$GLOWROOT_COLLECTOR_ADDRESS
+    --enable-preview \
+    -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000
+#    -javaagent:glowroot/glowroot.jar \
+#    -Dglowroot.collector.address=$GLOWROOT_COLLECTOR_ADDRESS
 
 EXPOSE 8080/tcp 8081/tcp 8000
 
@@ -114,6 +117,7 @@ COPY glowroot/ glowroot/
 ENV SPRING_PROFILES_ACTIVE=dev
 ARG GLOWROOT_COLLECTOR_ADDRESS
 ENV JAVA_TOOL_OPTIONS \
+    --enable-preview \
     -javaagent:glowroot/glowroot.jar \
     -Dglowroot.collector.address=$GLOWROOT_COLLECTOR_ADDRESS
 

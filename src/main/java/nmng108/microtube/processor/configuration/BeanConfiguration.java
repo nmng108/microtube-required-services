@@ -17,7 +17,7 @@ import java.beans.PropertyEditorSupport;
 import java.util.Locale;
 
 @Configuration
-public class BeanConfig {
+public class BeanConfiguration {
     @Bean
     public ObjectMapper objectMapper() {
         return new JsonMapper(); // experimental; may not work properly

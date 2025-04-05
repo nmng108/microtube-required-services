@@ -16,15 +16,20 @@ public class SignUpRequest {
     @Pattern(regexp = "^\\w+$")
     String username;
     @NotNull
-    @Size(min = 6, max = 50)
+    @Size(min = 6, max = 150)
     String password;
+    @NotNull
+    @Size(min = 6, max = 80)
+    String name;
     @Email
+    @Size(min = 6, max = 100)
     String email;
 
     public User toUser() {
         return User.builder()
                 .username(username)
                 .password(password)
+                .name(name)
                 .email(email)
                 .build();
     }

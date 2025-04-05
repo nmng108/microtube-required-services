@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import nmng108.microtube.processor.util.SimpleMessageInterpolator;
 import nmng108.microtube.processor.util.constant.Constants;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.time.ZoneOffset;
@@ -97,7 +98,7 @@ public class ExceptionResponse extends BaseResponse<Object> {
      * @param details the keys can be field names if caught validation exceptions
      *                or of unsigned integer if the error is not specific to any param / input field (in a form).
      */
-    // level-3 constructor
+    // level-4 constructor
     public ExceptionResponse(ErrorCode errorCode, Map<?, String> details) {
         this(errorCode, details, LocaleContextHolder.getLocale());
     }
@@ -108,7 +109,7 @@ public class ExceptionResponse extends BaseResponse<Object> {
      * @param details the keys can be field names if caught validation exceptions
      *                or of unsigned integer (just like an {@link List}) if the error is not specific to any param / input field (in a form).
      */
-    // level-2 constructor
+    // level-3 constructor
     public ExceptionResponse(ErrorCode errorCode, Map<?, String> details, Locale locale) {
         this(errorCode, locale);
         this.details = details;
@@ -128,18 +129,20 @@ public class ExceptionResponse extends BaseResponse<Object> {
      * @param details can accept any value, so use this constructor with caution.
      */
     // level-2 constructor
-    public ExceptionResponse(ErrorCode errorCode, Object details) {
+    public ExceptionResponse(ErrorCode errorCode, @Nullable Object details) {
         this(errorCode, details, LocaleContextHolder.getLocale());
     }
 
     /**
      * @param details can accept any value, so use this constructor with caution.
      */
-    // level-2 constructor
-    public ExceptionResponse(ErrorCode errorCode, Object details, Locale locale) {
+    // level-3 constructor
+    public ExceptionResponse(ErrorCode errorCode, @Nullable Object details, Locale locale) {
         this(errorCode, locale);
 
-        Assert.isTrue(details instanceof List<?> || details instanceof Map<?, ?>, "details must be a list or a map");
+        if (details != null) {
+            Assert.isTrue(details instanceof List<?> || details instanceof Map<?, ?>, "details must be a list or a map");
+        }
 
         this.details = details;
     }
@@ -184,5 +187,6 @@ public class ExceptionResponse extends BaseResponse<Object> {
                 '}';
     }
 
-    public record ViolatedField(String field, String message) {}
+    public record ViolatedField(String field, String message) {
+    }
 }

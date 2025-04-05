@@ -4,10 +4,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Encoders;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import nmng108.microtube.processor.configuration.ObjectStoreConfiguration;
+import nmng108.microtube.processor.service.ObjectStoreService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,13 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 //		DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class, HibernateJpaAutoConfiguration.class
 })
 @RestController
-@EnableJpaAuditing(auditorAwareRef = "auditorAwareConfig")
 @EnableScheduling
 @Slf4j
-public class RestfulProjectApplication {
+public class RestfulApplication /*implements CommandLineRunner*/ {
+    @Autowired
+    ObjectStoreService objectStoreService;
+    @Autowired
+    ObjectStoreConfiguration objectStoreConfiguration;
 
     public static void main(String[] args) {
-        SpringApplication.run(RestfulProjectApplication.class, args);
+        SpringApplication.run(RestfulApplication.class, args);
     }
 
     @GetMapping("/healthcheck")
@@ -39,4 +44,10 @@ public class RestfulProjectApplication {
 //        log.info("This is periodic log from the main file. Datetime: {}", ZonedDateTime.now(ZoneId.of("GMT+7")).format(DateTimeFormatter.ISO_DATE_TIME));
         log.info(Encoders.BASE64.encode(Jwts.SIG.HS256.key().build().getEncoded()));
     }
+
+//    @Override
+//    public void run(String... args) throws Exception {
+//        log.info("Deleting object...");
+//        objectStoreService.removeObject(objectStoreConfiguration.getUserStoreBucketName(), "/1/c941a9fc-f11b-4d1e-b509-25d7f4752225.mp4");
+//    }
 }

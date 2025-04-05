@@ -7,11 +7,16 @@ import lombok.experimental.FieldDefaults;
 import nmng108.microtube.processor.dto.auth.SignUpRequest;
 import nmng108.microtube.processor.dto.base.BaseResponse;
 import nmng108.microtube.processor.dto.user.UserDTO;
+import nmng108.microtube.processor.entity.User;
 import nmng108.microtube.processor.exception.BadRequestException;
 import nmng108.microtube.processor.repository.UserRepository;
 import nmng108.microtube.processor.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,8 +49,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> getCurrentUser() {
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                // As of current Spring Security version (3.2), authentication is always set with default properties
+                // (even when user haven't set it yet):
+                // { "authenticated": true, "principle": "anonymousUser", "authorities": [SimpleGrantedAuthority("ROLE_ANONYMOUS")] }
+                // Therefore, this predicate must be false in case of an anonymous access.
+                .filter((authentication) -> !(authentication instanceof AnonymousAuthenticationToken))
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getPrincipal)
+                .map(User.class::cast);
+    }
+
+    @Override
     @Transactional
-    public BaseResponse<?> registerUser(SignUpRequest signUpRequest) {
+    public BaseResponse<UserDTO> registerUser(SignUpRequest signUpRequest) {
         userRepository.findByUsername(signUpRequest.getUsername()).ifPresent((user) -> {
             throw new BadRequestException("Username already exists");
         });

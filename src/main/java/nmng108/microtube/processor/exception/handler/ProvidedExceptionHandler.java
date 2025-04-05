@@ -19,9 +19,11 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.lang.annotation.Annotation;
@@ -63,10 +65,9 @@ public class ProvidedExceptionHandler {
     }
 
     /**
-     * Manually thrown when the resource is not found
+     * Manually thrown when the resource is not found by matching HTTP method and path
      *
-     * @param e 404
-     * @return
+     * @return 404
      */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<BaseResponse<?>> handleSpringNoServletResourceFoundException(NoResourceFoundException e) {
@@ -95,10 +96,9 @@ public class ProvidedExceptionHandler {
      */
     @ExceptionHandler(PropertyReferenceException.class)
     public ResponseEntity<ExceptionResponse> handleMismatchPropertyName(PropertyReferenceException e) {
-//        log.info("({}) {}", e.getClass().getCanonicalName(), e.getMessage());
+        log.info("({}) {}", e.getClass().getCanonicalName(), e.getMessage());
 
-        return null;
-//        return new InvalidRequestException(e.getMessage()).toResponse();
+        return new BadRequestException(ErrorCode.E00002, e.getMessage()).toResponse();
     }
 
 //    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
@@ -106,6 +106,24 @@ public class ProvidedExceptionHandler {
 //        log.error("InvalidDataAccessApiUsageException: {}", e.getMessage());
 //        return this.handleInvalidRequest(new InvalidRequestException("Wrong field name"));
 //    }
+
+    /**
+     * @param e MissingServletRequestPartException
+     * @return 400
+     */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ExceptionResponse> handleMissingServletRequestPartException(MissingServletRequestPartException e) {
+        return new BadRequestException(ErrorCode.E00002, e.getMessage()).toResponse();
+    }
+
+    /**
+     * @param e HttpMediaTypeNotSupportedException
+     * @return 400
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ExceptionResponse> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+        return new BadRequestException(ErrorCode.E00002, e.getMessage()).toResponse();
+    }
 
     /**
      * Thrown when request data is parsed by DataBinder (the most common case is @RequestBody @Valid) and violates 1 or several constraints (e.g. Bean Validation).
@@ -240,12 +258,12 @@ public class ProvidedExceptionHandler {
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ExceptionResponse> handleUnreadableRequest(HttpMessageNotReadableException e) throws Exception {
-        return ResponseEntity.badRequest().body(new ExceptionResponse(ErrorCode.E00001));
+        return new BadRequestException(ErrorCode.E00001, e.getMessage()).toResponse();
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ExceptionResponse> handleMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        return ResponseEntity.badRequest().body(new ExceptionResponse(ErrorCode.E00000));
+        return new BadRequestException(ErrorCode.E00000, e.getMessage()).toResponse();
     }
 
     /**

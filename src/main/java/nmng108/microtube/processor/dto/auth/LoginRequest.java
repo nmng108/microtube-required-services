@@ -18,6 +18,6 @@ public class LoginRequest {
     @Pattern(regexp = "^\\w+$")
     String username;
     @NotNull
-    @Size(min = 6, max = 50)
+    @Size(min = 6, max = 150)
     String password;
 }

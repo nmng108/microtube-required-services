@@ -14,4 +14,8 @@ public interface Constants {
         String ERROR_CODES = "error-codes";
         String ERRORS = "errors";
     }
+
+    interface MessageBrokerQueueNames {
+        String VIDEO_PROCESSING_REQUEST_QUEUE = "queue.video-processing-request";
+    }
 }

@@ -6,10 +6,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import nmng108.microtube.processor.configuration.security.JwtUtils;
 import nmng108.microtube.processor.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,21 +26,18 @@ import java.io.IOException;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtVerificationFilter extends OncePerRequestFilter {
-    @Autowired
-    private JwtUtils jwtUtils;
+    private final static String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private UserRepository userRepository;
+    JwtUtils jwtUtils;
+    UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (!hasValidAuthorizationBearer(header)) {
             filterChain.doFilter(request, response);
@@ -71,11 +71,11 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     }
 
     private boolean hasValidAuthorizationBearer(String header) {
-        return header != null && header.matches("Bearer [.0-9a-zA-Z_-]+");
+        return header != null && header.matches(STR."^\{AUTHORIZATION_HEADER_PREFIX}[\\w-]+(\\.[\\w-]+){2}$");
     }
 
     private String getAccessToken(String header) {
-        return header.split("Bearer ")[1].trim();
+        return header.split(AUTHORIZATION_HEADER_PREFIX)[1].trim();
     }
 
     private UserDetails getUserDetails(Jws<Claims> claimsJws) {

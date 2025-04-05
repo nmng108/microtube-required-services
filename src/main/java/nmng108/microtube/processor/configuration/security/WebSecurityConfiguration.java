@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -29,16 +30,19 @@ public class WebSecurityConfiguration {
     UserDetailsService userDetailsService;
     JwtVerificationFilter jwtVerificationFilter;
     String serverBasePath;
+    String apiBasePath;
 
     public WebSecurityConfiguration(JwtAuthenticationEntryPoint authenticationEntryPoint,
                                     UserServiceImpl userService,
                                     JwtVerificationFilter jwtVerificationFilter,
-                                    @Value("${server.servlet.context-path:/api}") String serverBasePath
+                                    @Value("${server.servlet.context-path:}") String serverBasePath,
+                                    @Value("${api.base-path}") String apiBasePath
     ) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.userDetailsService = userService;
         this.jwtVerificationFilter = jwtVerificationFilter;
         this.serverBasePath = serverBasePath;
+        this.apiBasePath = apiBasePath;
     }
 
 //    @Bean
@@ -63,29 +67,29 @@ public class WebSecurityConfiguration {
     @Bean
     public FilterRegistrationBean<JwtVerificationFilter> registerJwtFilter(JwtVerificationFilter filter) {
         FilterRegistrationBean<JwtVerificationFilter> registrationBean = new FilterRegistrationBean<>(filter);
+
         registrationBean.setEnabled(false);
 
         return registrationBean;
     }
 
-//    @Bean
-//    public SecurityFilterChain authenticationEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
-//        httpSecurity
-//                .securityMatcher(AntPathRequestMatcher.antMatcher(serverBasePath + Routes.Auth.basePath + "/**"))
-//                .exceptionHandling((handler) -> handler.authenticationEntryPoint(this.authenticationEntryPoint))
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests((authorize) -> authorize
-//                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.login)).anonymous()
-//                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.register)).permitAll()
-//                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.forgot)).permitAll()
-//                        .anyRequest().permitAll()
-//                )
-//                .addFilterBefore(this.jwtVerificationFilter, UsernamePasswordAuthenticationFilter.class)
-//                .userDetailsService(this.userDetailsService)
-//        ;
-//
-//        return httpSecurity.build();
-//    }
+    @Bean
+    public SecurityFilterChain authenticationEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                .securityMatcher(AntPathRequestMatcher.antMatcher(apiBasePath + Routes.Auth.basePath + "/**"))
+                .exceptionHandling((handler) -> handler.authenticationEntryPoint(this.authenticationEntryPoint))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.login)).anonymous()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.user)).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.register)).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.forgot)).permitAll()
+                        .anyRequest().permitAll()
+                )
+                .addFilterBefore(this.jwtVerificationFilter, AuthorizationFilter.class)
+                .build();
+
+    }
 
 //    @Bean
 //    public SecurityFilterChain userManagementEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -106,7 +110,7 @@ public class WebSecurityConfiguration {
     @Bean
     public SecurityFilterChain videoProcessingEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .securityMatcher(serverBasePath + Routes.users + "/**")
+                .securityMatcher(apiBasePath + "/videos/*/upload")
                 .exceptionHandling((handler) -> handler.authenticationEntryPoint(this.authenticationEntryPoint))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize

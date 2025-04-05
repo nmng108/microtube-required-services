@@ -9,13 +9,13 @@ api:
 
 spring:
   application:
-    name: Restful project
+    name: ${APP_NAME:processor-service}
   servlet:
     multipart:
       max-file-size: 1GB
       max-request-size: 2GB
   datasource:
-    url: ${MAIN_DB_URL:jdbc:mysql://localhost:3306/MICROTUBE}
+    url: ${MAIN_DB_URL:jdbc:mysql://127.0.0.1:3306/MICROTUBE}
     username: ${MAIN_DB_USERNAME:dbuser}
     password: ${MAIN_DB_PASSWORD:abc123}
 
@@ -26,10 +26,25 @@ spring:
     basename: ${MESSAGES_BASENAME:messages,custom-response-status,errors,error-codes} # name prefix for the file containing message props. Format: config.i18n.messages (dot-separated path names)
     cache-duration: 3600
     encoding: UTF-8
-#  jpa:
-#    properties:
-#      hibernate:
-#        dialect: org.hibernate.dialect.MySQLDialect
+
+datasource:
+  object-store:
+    url: ${OBJECT_STORE_URL:http://127.0.0.1:9000}
+    username: ${OBJECT_STORE_USERNAME:admin}
+    password: ${OBJECT_STORE_PASSWORD:minioadmin}
+    bucket:
+      hls: ${OBJECT_STORE_BUCKET_HLS:hls}
+      user-store: ${OBJECT_STORE_BUCKET_USER_STORE:user-store}
+
+application:
+  jwt:
+    secret: ${JWT_SECRET:htfhvoa+IRypMSVcWbp0gWWkir18RCthewNQh/k/cFM=}
+    usage-duration: ${JWT_USAGE_DURATION:900000} # Unit: millisecond
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${SERVICE_REGISTRAR_URL:http://localhost:8761/eureka/}
 
 springdoc:
   swagger-ui:
@@ -40,11 +55,6 @@ springdoc:
   api-docs:
     version: openapi_3_1
     enabled: true
-
-application:
-  jwt:
-    secret: ${JWT_SECRET:htfhvoa+IRypMSVcWbp0gWWkir18RCthewNQh/k/cFM=}
-    usage-duration: ${JWT_USAGE_DURATION:120000} # Unit: millisecond
 
 #fluentd:
 #  host: ${FLUENTD_HOST:localhost}
