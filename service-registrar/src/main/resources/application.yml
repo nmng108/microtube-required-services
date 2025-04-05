@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: ${SERVICE_NAME:service-registrar}
+server:
+  port: ${PORT:8761}
+eureka:
+  instance:
+    hostname: ${HOSTNAME:service-registrar}
+  client:
+    serviceUrl:
+      defaultZone: ${SERVICE_REGISTRAR_URL:http://localhost:8761/eureka/}
+
+---
+#eureka:
+#  instance:
+#    lease-renewal-interval-in-seconds: 1
+#    lease-expiration-duration-in-seconds: 1
+#  client:
+#    initial-instance-info-replication-interval-seconds: 0
+#    instance-info-replication-interval-seconds: 1
+#    registry-fetch-interval-seconds: 1
+#---
+#eureka:
+#  client:
+#    register-with-eureka: false
+#    fetch-registry: false
+#  server:
+#    enable-self-preservation: true
+#    eviction-interval-timer-in-ms: 5000
+#    wait-time-in-ms-when-sync-empty: 0
+#    response-cache-update-interval-ms: 1000
+#    renewal-threshold-update-interval-ms: 3000
+#    renewal-percent-threshold: 0.85
+#    use-read-only-response-cache: false
+#    peer-node-read-timeout-ms: 2000
+
+#ribbon:
+#  ServerListRefreshInterval: 1000
+---
+#spring:
+#  redis:
+#    host: ${REDIS_URL:10.252.11.113}
+#    port: ${REDIS_PORT:6379}
+
+#server:
+#  servlet:
+#    session:
+#      timeout: 10
+---
+#spring:
+#  session:
+#    redis:
+#      flush-mode: on-save
+#      namespace: spring:session
+
+#
+#spring.session.store-type=jdbc
+#spring.session.jdbc.table-name=SESSIONS
+#---
+#spring:
+#  security:
+#    user:
+#      name: configUser
+#      password: configPassword
+#      role: SYSTEM
+---
+#spring:
+#  profiles: secure
+#  security:
+#    user:
+#      name: admin
+#      password: password
+#      roles:
+#        - ADMIN
+
+---
+#spring:
+#  session:
+#    store-type: redis
