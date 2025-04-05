@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>nmng108.microtube</groupId>
-	<artifactId>processor</artifactId>
+	<artifactId>processor-auth</artifactId>
 	<version>0.0.1</version>
 	<name>Video processor</name>
 	<description></description>
