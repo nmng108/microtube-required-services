@@ -43,6 +43,8 @@ public class User extends Accountable implements UserDetails {
     String phoneNumber;
     @Column(name = "ADDITIONAL_INFO")
     String additionalInfo;
+    @Column(name = "AVATAR", length = 150)
+    String avatar;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.EAGER)
     Channel channel;

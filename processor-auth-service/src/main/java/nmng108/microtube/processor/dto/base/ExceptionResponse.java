@@ -22,11 +22,10 @@ public class ExceptionResponse extends BaseResponse<Object> {
     String errorCode;
     /**
      * The list of error details.<br>
-     * - If the HTTP status is 4xx (client error), this list can be used to show to end user's UI.<br>
-     * - If the HTTP status is 4xx (server error), this list should be used only to inform API users what's being wrong with the server.
+     * - If the HTTP status is 4xx (client error), this list may be used to show to end user's UI.<br>
+     * - If the HTTP status is 5xx (server error), this list should be used only to inform API users what's being wrong with the server.
      * <br>
-     * There are available 2 formats: {@link List} and {@link Map}. While {@link List} can be used widely
-     * for most scenarios, {@link Map} is preferred to be used to present validation errors when user submits forms.
+     * There is only 1 format: {@link List}. Element inside the list can be either a string or a POJO.
      */
     Object details;
     /**

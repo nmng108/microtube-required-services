@@ -29,7 +29,7 @@ public class JwtUtils {
     String secretKey;
 
     public JwtUtils(@Value("${application.jwt.usage-duration}") long duration, @Value("${application.jwt.secret}") String secretKey) {
-        this.usageDuration = duration;
+        this.usageDuration = duration * 1000;
         this.secretKey = secretKey;
     }
 

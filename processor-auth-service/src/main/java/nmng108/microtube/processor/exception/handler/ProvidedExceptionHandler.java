@@ -16,6 +16,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
@@ -46,10 +47,10 @@ public class ProvidedExceptionHandler {
      * @param e UsernameNotFoundException
      * @return 401 HTTP status
      */
-    @ExceptionHandler(UsernameNotFoundException.class)
+    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class /*thrown by DaoAuthenticationProvider in respective AuthenticationProvider when user is not found*/,})
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public BaseResponse<?> handleUsernameNotFoundException(UsernameNotFoundException e) {
-        return new ExceptionResponse(ErrorCode.E00007);
+    public BaseResponse<?> handleUsernameNotFoundException(Exception e) {
+        return new ExceptionResponse(ErrorCode.E00010);
     }
 
     /**

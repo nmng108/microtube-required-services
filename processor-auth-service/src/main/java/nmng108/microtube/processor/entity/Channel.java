@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import nmng108.microtube.processor.util.constant.Constants;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,9 +24,11 @@ public class Channel extends Accountable {
     @Column(name = "NAME")
     String name;
     @Column(name = "PATHNAME")
-    String pathName;
+    String pathname;
     @Column(name = "DESCRIPTION")
     String description;
+    @Column(name = "AVATAR", length = 150)
+    String avatar;
 
     @JoinColumn(name = "USER_ID")
     @OneToOne(fetch = FetchType.LAZY)

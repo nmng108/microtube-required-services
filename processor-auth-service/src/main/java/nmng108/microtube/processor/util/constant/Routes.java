@@ -5,7 +5,7 @@ public interface Routes {
         String basePath = "/auth";
         String login = Auth.basePath + "/login";
         String user = Auth.basePath + "/user";
-        String register = Auth.basePath + "/register";
+        String signup = Auth.basePath + "/signup";
         String forgot = Auth.basePath + "/forgot";
     }
 

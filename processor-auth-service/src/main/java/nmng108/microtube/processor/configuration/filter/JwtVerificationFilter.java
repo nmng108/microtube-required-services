@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import nmng108.microtube.processor.configuration.security.JwtUtils;
-import nmng108.microtube.processor.repository.UserRepository;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +29,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtVerificationFilter extends OncePerRequestFilter {
-    private final static String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
+    private final static String BEARER_TOKEN_PREFIX = "Bearer ";
 
     JwtUtils jwtUtils;
     UserDetailsService userDetailsService;
@@ -37,14 +37,14 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (!hasValidAuthorizationBearer(header)) {
+        if (!isValidBearerToken(authHeader)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = getAccessToken(header);
+        String token = getAccessToken(authHeader);
         Jws<Claims> claimsJws = jwtUtils.parseClaims(token);
 
         if (claimsJws == null) {
@@ -70,12 +70,12 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean hasValidAuthorizationBearer(String header) {
-        return header != null && header.matches(STR."^\{AUTHORIZATION_HEADER_PREFIX}[\\w-]+(\\.[\\w-]+){2}$");
+    private boolean isValidBearerToken(@Nullable String token) {
+        return token != null && token.matches(STR."^\{BEARER_TOKEN_PREFIX}[\\w-]+(\\.[\\w-]+){2}$");
     }
 
     private String getAccessToken(String header) {
-        return header.split(AUTHORIZATION_HEADER_PREFIX)[1].trim();
+        return header.split(BEARER_TOKEN_PREFIX)[1].trim();
     }
 
     private UserDetails getUserDetails(Jws<Claims> claimsJws) {

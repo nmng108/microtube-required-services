@@ -5,7 +5,8 @@ server:
 
 api:
   version: v1
-  base-path: "#{'${server.servlet.context-path:}'.length > 0 ? '/${server.servlet.context-path:}' : ''}/api#{'${api.version:}'.length > 0 ? '/${api.version:}' : ''}"
+  base-path: "/api#{'${api.version:}'.length > 0 ? '/${api.version:}' : ''}"
+  server-base-path: "${server.servlet.context-path:}${api.base-path:}"
 
 spring:
   application:
@@ -33,13 +34,15 @@ datasource:
     username: ${OBJECT_STORE_USERNAME:admin}
     password: ${OBJECT_STORE_PASSWORD:minioadmin}
     bucket:
+      temporary: ${OBJECT_STORE_BUCKET_TEMP:temporary}
       hls: ${OBJECT_STORE_BUCKET_HLS:hls}
-      user-store: ${OBJECT_STORE_BUCKET_USER_STORE:user-store}
+      avatar: ${OBJECT_STORE_BUCKET_AVATAR:avatar}
+      thumbnail: ${OBJECT_STORE_BUCKET_THUMBNAIL:thumbnail}
 
 application:
   jwt:
     secret: ${JWT_SECRET:htfhvoa+IRypMSVcWbp0gWWkir18RCthewNQh/k/cFM=}
-    usage-duration: ${JWT_USAGE_DURATION:900000} # Unit: millisecond
+    usage-duration: ${JWT_USAGE_DURATION:1800} # Unit: second
 
 eureka:
   client:

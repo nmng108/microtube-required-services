@@ -22,16 +22,18 @@ public class Video extends Accountable {
     @Column(name = "ID")
     @Id
     long id; // TODO: may use Base64 64-bit string instead
-    @Column(name = "NAME")
-    String name;
     @Column(name = "CODE")
     String code;
+    @Column(name = "TITLE")
+    String title;
     @Column(name = "DESCRIPTION")
     String description;
     @Column(name = "VISIBILITY")
     int visibility;
     @Column(name = "ORIGINAL_FILENAME")
     String originalFilename;
+    @Column(name = "THUMBNAIL")
+    String thumbnail;
     @Column(name = "TEMP_FILEPATH")
     String tempFilepath;
     @Column(name = "DEST_FILEPATH")

@@ -7,6 +7,7 @@ import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import nmng108.microtube.processor.exception.VideoProcessingException;
 import nmng108.microtube.processor.repository.VideoRepository;
+import nmng108.microtube.processor.util.Helper;
 import nmng108.microtube.processor.util.constant.Constants;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQQueue;
@@ -22,6 +23,9 @@ import org.springframework.jms.support.converter.MappingJackson2MessageConverter
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 import org.springframework.util.ErrorHandler;
+
+import java.io.IOException;
+import java.nio.file.Files;
 
 @Configuration
 @Slf4j
@@ -75,7 +79,20 @@ public class MessageBrokerConfiguration {
             throwable.printStackTrace();
             if (throwable.getCause() instanceof VideoProcessingException e) {
                 log.info("Handling VideoProcessingException: {}", e.getMessage());
-//                // TODO: schedule to delete the video record along with original file
+
+                try {
+                    if (e.getLocalOriginalFile() != null && Files.exists(e.getLocalOriginalFile().toPath())) {
+                        Files.delete(e.getLocalOriginalFile().toPath());
+                    }
+
+                    if (e.getLocalDestinationDirectory() != null && Files.exists(e.getLocalDestinationDirectory())) {
+                        Helper.deleteDirectory(e.getLocalDestinationDirectory());
+                    }
+                } catch (IOException e1) {
+                    log.error("Error deleting local original files. Reason: {}", e1.getMessage());
+                }
+
+//                // TODO: schedule to delete the video record and its files after a sufficient number of attempts
 //                videoRepository.deleteById(e.getVideoId());
                 return;
             }

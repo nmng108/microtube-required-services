@@ -13,7 +13,6 @@ import nmng108.microtube.processor.configuration.security.JwtUtils;
 import nmng108.microtube.processor.dto.auth.*;
 import nmng108.microtube.processor.dto.base.BaseResponse;
 import nmng108.microtube.processor.dto.user.UserDTO;
-import nmng108.microtube.processor.entity.Channel;
 import nmng108.microtube.processor.entity.Permission;
 import nmng108.microtube.processor.entity.User;
 import nmng108.microtube.processor.exception.UnauthorizedException;
@@ -22,6 +21,7 @@ import nmng108.microtube.processor.repository.impl.PermissionRepositoryDecorator
 import nmng108.microtube.processor.service.UserService;
 import nmng108.microtube.processor.util.constant.Routes;
 import org.springframework.beans.PropertyEditorRegistrar;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,7 +30,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.util.Date;
+import java.util.TimeZone;
 
 @RestController
 @RequestMapping("${api.base-path}")
@@ -102,9 +105,16 @@ public class AuthController {
         this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user, loginRequest.getPassword()));
 
         String accessToken = jwtUtils.generateAccessToken(user);
-        LoginResponse response = new LoginResponse(user.getUsername(), jwtUtils.getExpiration(accessToken), accessToken);
+        Date expirationDate = jwtUtils.getExpiration(accessToken);
+        LoginResponse response = new LoginResponse(user.getUsername(), accessToken, jwtUtils.getExpiration(accessToken));
 
-        return ResponseEntity.ok(BaseResponse.succeeded(response));
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
+
+        sdf.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, STR."token=\{accessToken}; \{sdf.format(expirationDate)}; Path=/api; SameSite=None; Secure; HttpOnly")
+                .body(BaseResponse.succeeded(response));
     }
 
     @Operation(
@@ -113,9 +123,20 @@ public class AuthController {
                     @ApiResponse(responseCode = "200", description = "The account has successfully been registered", useReturnTypeSchema = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
             }
     )
-    @PostMapping(Routes.Auth.register)
-    public ResponseEntity<BaseResponse<UserDTO>> registerNewAccount(@RequestBody @Valid SignUpRequest signUpRequest) {
-        return ResponseEntity.ok(userService.registerUser(signUpRequest));
+    @PostMapping(Routes.Auth.signup)
+    public ResponseEntity<BaseResponse<LoginResponse>> registerNewAccount(@RequestBody @Valid SignUpRequest signUpRequest) {
+        User user = userService.registerUser(signUpRequest);
+        String accessToken = jwtUtils.generateAccessToken(user);
+        Date expirationDate = jwtUtils.getExpiration(accessToken);
+        LoginResponse response = new LoginResponse(user.getUsername(), accessToken, jwtUtils.getExpiration(accessToken));
+
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
+
+        sdf.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, STR."token=\{accessToken}; \{sdf.format(expirationDate)}; Path=/api; SameSite=None; Secure; HttpOnly")
+                .body(BaseResponse.succeeded(response));
     }
 
     @PostMapping(Routes.Auth.forgot)

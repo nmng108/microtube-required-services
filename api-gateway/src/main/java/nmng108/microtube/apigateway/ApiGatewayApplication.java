@@ -39,12 +39,13 @@ public class ApiGatewayApplication {
                                  @Value("${rest-service.main-service.name}") String mainService,
                                  @Value("${rest-service.processor.name}") String processorService) {
         return builder.routes()
-                .route(p -> p.path("/api/*/auth/*")
+                .route(p -> p.path("/api/*/auth/*", "/api/*/users/**")
                         .uri("lb://" + authService))
-                .route(p -> p.method(HttpMethod.POST).and().path("/api/*/videos/*/upload")
+                .route(p -> p.method(HttpMethod.PUT).and().path("/api/*/videos/*/upload", "/api/*/videos/*/thumbnail", "/api/*/users/*/avatar", "/api/*/channels/*/avatar")
+//                        .or().predicate((exchange) -> exchange.getRequest().getMethod().equals(HttpMethod.PUT)
+//                                && exchange.getRequest().getPath().value().matches("^/api/v\\d{1,2}/channels/[\\w-.]+/avatar$"))
                         .uri("lb://" + processorService))
-                .route(p -> p.predicate((exchange) -> exchange.getRequest().getPath().value().matches("^/api/v\\d{1,2}/videos(/[\\w\\-.]+)*$"))
-                        .or().predicate((exchange) -> exchange.getRequest().getPath().value().matches("^/api/v\\d{1,2}/channels(/[\\w\\-]+)*$"))
+                .route(p -> p.predicate((exchange) -> exchange.getRequest().getPath().value().matches("^/api/v\\d{1,2}/[\\w-]+(/[\\w-.]+)*$"))
                         .uri("lb://" + mainService))
                 .build();
     }

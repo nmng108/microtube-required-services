@@ -1,26 +1,26 @@
 package nmng108.microtube.processor.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import nmng108.microtube.processor.dto.base.BaseResponse;
 import nmng108.microtube.processor.dto.base.PagingRequest;
-import nmng108.microtube.processor.entity.User;
+import nmng108.microtube.processor.dto.user.UpdateUserDTO;
+import nmng108.microtube.processor.dto.user.UserDTO;
+import nmng108.microtube.processor.exception.ResourceNotFoundException;
+import nmng108.microtube.processor.exception.UnauthorizedException;
 import nmng108.microtube.processor.service.UserService;
 import nmng108.microtube.processor.util.constant.Routes;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.ZonedDateTime;
-import java.util.Locale;
-import java.util.TimeZone;
-
 @RestController
-@RequestMapping(Routes.users)
+@RequestMapping("${api.base-path}" + Routes.users)
 @Validated
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -40,24 +40,39 @@ public class UserController {
         log.info("ASC pageable: {}", pagingRequest);
 //        PagingRequest pagingRequest = new PagingRequest();
 //        pagingRequest.setPage();
-        return ResponseEntity.ok(userService.getAllUsers());
+        return ResponseEntity.ok(userService.getAll(pagingRequest));
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<?> getUser(@PathVariable("username") @NotBlank/* @Pattern(regexp = "^[a-z]+$", message = "{validation.Pattern.message}")*/ String username, Locale locale, TimeZone timeZone) {
-        log.info("Test msg source: {}", messageSource.getMessage("testmsg", new Object[]{ZonedDateTime.now(timeZone.toZoneId())}, locale));
-        return ResponseEntity.ok(userService.getSpecifiedUser(username));
+    @GetMapping("/{id}")
+    public ResponseEntity<BaseResponse<UserDTO>> getUser(@PathVariable @NotBlank String id) {
+        return ResponseEntity.ok(BaseResponse.succeeded(userService.find(id).map(UserDTO::new).orElseThrow(ResourceNotFoundException::new)));
     }
 
-    @PostMapping
-    public ResponseEntity<?> addNewUser(@AuthenticationPrincipal User principle) {
-        log.info("User: {}", principle);
-        return ResponseEntity.ok("userService.create()");
+    @Operation(summary = "Fetch detail information of current authenticated account")
+    @GetMapping("/details")
+    public ResponseEntity<BaseResponse<UserDTO>> getDetails() {
+        return userService.getCurrentUser()
+                .map((u) -> new UserDTO(u, u.getChannel()))
+                .map((u) -> ResponseEntity.ok(BaseResponse.succeeded(u)))
+                .orElseThrow(UnauthorizedException::new);
     }
+//
+//    @GetMapping("/{username}")
+//    public ResponseEntity<?> getUser(@PathVariable("username") @NotBlank/* @Pattern(regexp = "^[a-z]+$", message = "{validation.Pattern.message}")*/ String username, Locale locale, TimeZone timeZone) {
+//        log.info("Test msg source: {}", messageSource.getMessage("testmsg", new Object[]{ZonedDateTime.now(timeZone.toZoneId())}, locale));
+//        return ResponseEntity.ok(userService.getSpecifiedUser(username));
+//    }
 
-    @PutMapping
-    public ResponseEntity<?> updateUserInfo() {
-        return ResponseEntity.ok("updated");
+//    @PostMapping
+//    public ResponseEntity<?> addNewUser(@AuthenticationPrincipal User principle) {
+//        log.info("User: {}", principle);
+//        return ResponseEntity.ok("userService.create()");
+//    }
+
+    @Operation(summary = "Update information of current authenticated account")
+    @PatchMapping("/details")
+    public ResponseEntity<?> updateUserInfo(UpdateUserDTO dto) {
+        return ResponseEntity.ok(userService.updateCurrentUser(dto));
     }
 
 //    @PostMapping("/upload")

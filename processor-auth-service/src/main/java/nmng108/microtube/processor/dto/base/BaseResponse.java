@@ -50,7 +50,7 @@ public class BaseResponse<T> {
      * Set {@link CustomResponseStatus#SUCCESS} by default.
      * You can use the {@link BaseResponse#succeeded(T)} factory methods instead.
      */
-    public BaseResponse(T data) {
+    public BaseResponse(@Nullable T data) {
         this(CustomResponseStatus.SUCCESS, null, null, data);
     }
 
@@ -105,7 +105,7 @@ public class BaseResponse<T> {
         return new BaseResponse<>();
     }
 
-    public static <T> BaseResponse<T> succeeded(T data) {
+    public static <T> BaseResponse<T> succeeded(@Nullable T data) {
         return new BaseResponse<>(data);
     }
 

@@ -3,18 +3,17 @@ package nmng108.microtube.processor.configuration.security;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import nmng108.microtube.processor.configuration.filter.JwtVerificationFilter;
-import nmng108.microtube.processor.service.impl.UserServiceImpl;
 import nmng108.microtube.processor.util.constant.Routes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -27,21 +26,21 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class WebSecurityConfiguration {
     AuthenticationEntryPoint authenticationEntryPoint;
-    UserDetailsService userDetailsService;
+//    UserDetailsService userDetailsService;
     JwtVerificationFilter jwtVerificationFilter;
-    String serverBasePath;
+//    String serverBasePath;
     String apiBasePath;
 
     public WebSecurityConfiguration(JwtAuthenticationEntryPoint authenticationEntryPoint,
-                                    UserServiceImpl userService,
+//                                    UserServiceImpl userService,
                                     JwtVerificationFilter jwtVerificationFilter,
-                                    @Value("${server.servlet.context-path:}") String serverBasePath,
-                                    @Value("${api.base-path}") String apiBasePath
+//                                    @Value("${server.servlet.context-path:}") String serverBasePath,
+                                    @Value("${api.server-base-path}") String apiBasePath
     ) {
         this.authenticationEntryPoint = authenticationEntryPoint;
-        this.userDetailsService = userService;
+//        this.userDetailsService = userService;
         this.jwtVerificationFilter = jwtVerificationFilter;
-        this.serverBasePath = serverBasePath;
+//        this.serverBasePath = serverBasePath;
         this.apiBasePath = apiBasePath;
     }
 
@@ -82,7 +81,7 @@ public class WebSecurityConfiguration {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.login)).anonymous()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.user)).authenticated()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.register)).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.signup)).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(Routes.Auth.forgot)).permitAll()
                         .anyRequest().permitAll()
                 )
@@ -91,26 +90,25 @@ public class WebSecurityConfiguration {
 
     }
 
-//    @Bean
-//    public SecurityFilterChain userManagementEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
-//        httpSecurity
-//                .securityMatcher(serverBasePath + Routes.users + "/**")
-//                .exceptionHandling((handler) -> handler.authenticationEntryPoint(this.authenticationEntryPoint))
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests((authorize) -> authorize
-//                        .anyRequest().authenticated()
-//                )
-//                .addFilterBefore(this.jwtVerificationFilter, AuthorizationFilter.class)
-////                .userDetailsService(this.userDetailsService)
-//        ;
-//
-//        return httpSecurity.build();
-//    }
+    @Bean
+    public SecurityFilterChain userAndChannelManagementEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                .securityMatcher(apiBasePath + Routes.users + "/**", apiBasePath + "/channels/**")
+                .exceptionHandling((handler) -> handler.authenticationEntryPoint(this.authenticationEntryPoint))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers(HttpMethod.GET).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/details").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(this.jwtVerificationFilter, AuthorizationFilter.class)
+                .build();
+    }
 
     @Bean
     public SecurityFilterChain videoProcessingEndpointFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .securityMatcher(apiBasePath + "/videos/*/upload")
+                .securityMatcher(apiBasePath + "/videos/**")
                 .exceptionHandling((handler) -> handler.authenticationEntryPoint(this.authenticationEntryPoint))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize

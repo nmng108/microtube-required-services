@@ -14,6 +14,6 @@ import java.util.Date;
 @ToString
 public class LoginResponse {
     String username;
-    Date expireAt;
     String token;
+    Date expireAt;
 }

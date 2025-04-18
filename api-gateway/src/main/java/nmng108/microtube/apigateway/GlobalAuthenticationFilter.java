@@ -11,8 +11,8 @@ import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -23,7 +23,7 @@ import java.util.Optional;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GlobalAuthenticationFilter implements GlobalFilter, Ordered {
-    private final static String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
+    private final static String BEARER_TOKEN_PREFIX = "Bearer ";
 
     WebClient.Builder webClientBuilder;
     HttpMethod authServiceApiTokenVerifyingMethod;
@@ -43,31 +43,31 @@ public class GlobalAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        log.info("get request: {}", exchange.getRequest().getPath());
+        var request = exchange.getRequest();
+        var response = exchange.getResponse();
         var noAuthRequestHeaderExchange = exchange.mutate().request(
                 (builder) -> builder.headers(h -> h.remove(HttpHeaders.AUTHORIZATION))
         ).build();
 
-        return Optional.ofNullable(exchange.getRequest().getCookies().getFirst("token"))
-                // If Authorization header is not present, create that header with value of "token" cookie before passing the request downstream
-                .filter((ignored) -> !StringUtils.hasText(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION)))
+        // If cookie "token" is present, create Authorization header with value of the cookie before passing the request downstream
+        return Optional.ofNullable(request.getCookies().getFirst("token"))
                 .map(HttpCookie::getValue)
-                .or(() -> Optional.ofNullable(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION)))
+                .filter((token) -> token.matches("^[\\w-]+(\\.[\\w-]+){2}$"))
+                // In other hand, if the cookie is absent and value of the Authorization header exists and is in valid format, submit this instead
+                .or(() -> Optional.ofNullable(request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION))
+                        .filter(this::isValidBearerToken))
                 .map((token) -> {
-                    log.info("cookie token: {}", token);
+                    String bearerToken = (token.startsWith(BEARER_TOKEN_PREFIX) ? "" : BEARER_TOKEN_PREFIX) + token;
+                    log.info("user's token: {}", token);
 
-                    // TODO:
-                    //      1. Externalize API path and/or version
-                    //      2. Make this API call fault tolerant by utilizing Hystrix
+                    // TODO: Make this API call fault tolerant by utilizing Hystrix
                     return webClientBuilder.build().method(authServiceApiTokenVerifyingMethod).uri(authServiceApiTokenVerifyingPath)
-                            .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_PREFIX + token)
+                            .header(HttpHeaders.AUTHORIZATION, bearerToken)
                             .exchangeToMono((clientResponse) -> Mono.just(clientResponse.statusCode()))
-                            .doOnNext((code) -> log.info("Result of " +
-                                    "verifying token" +
-                                    ": {}", code))
+                            .doOnNext((code) -> log.info("Result of verifying token : {}", code))
                             .filter(HttpStatusCode::is2xxSuccessful)
                             .map((ignored) -> noAuthRequestHeaderExchange.mutate().request(
-                                    (builder) -> builder.header(HttpHeaders.AUTHORIZATION, AUTHORIZATION_HEADER_PREFIX + token)
+                                    (builder) -> builder.header(HttpHeaders.AUTHORIZATION, bearerToken)
                             ).build())
                             .onErrorReturn(noAuthRequestHeaderExchange)
                             .switchIfEmpty(Mono.just(noAuthRequestHeaderExchange));
@@ -75,10 +75,14 @@ public class GlobalAuthenticationFilter implements GlobalFilter, Ordered {
                 .orElse(Mono.just(noAuthRequestHeaderExchange))
                 .flatMap(chain::filter)
                 .then(Mono.fromRunnable(() -> {
-                    log.info("Respond to request '{}' - status {}", exchange.getRequest().getPath(), exchange.getResponse().getStatusCode());
+                    log.info("Respond to request '{}' - status {}", request.getPath(), response.getStatusCode());
                 }));
 
 //        return chain.filter(exchange)
+    }
+
+    private boolean isValidBearerToken(@Nullable String bearerToken) {
+        return bearerToken != null && bearerToken.matches(STR."^\{BEARER_TOKEN_PREFIX}[\\w-]+(\\.[\\w-]+){2}$");
     }
 
     @Override

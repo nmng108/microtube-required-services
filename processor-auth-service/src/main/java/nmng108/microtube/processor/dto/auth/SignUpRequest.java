@@ -24,6 +24,8 @@ public class SignUpRequest {
     @Email
     @Size(min = 6, max = 100)
     String email;
+    @Size(min = 6, max = 20)
+    String phoneNumber;
 
     public User toUser() {
         return User.builder()
@@ -31,6 +33,7 @@ public class SignUpRequest {
                 .password(password)
                 .name(name)
                 .email(email)
+                .phoneNumber(phoneNumber)
                 .build();
     }
 }
