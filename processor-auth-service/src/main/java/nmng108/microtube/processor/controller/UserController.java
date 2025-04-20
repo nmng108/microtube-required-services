@@ -1,6 +1,7 @@
 package nmng108.microtube.processor.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +31,6 @@ public class UserController {
     UserService userService;
     MessageSource messageSource;
 
-    /**
-     * This API is documented using Javadoc
-     *
-     * @return all users
-     */
     @GetMapping
     public ResponseEntity<?> getAllUsers(PagingRequest pagingRequest) {
         log.info("ASC pageable: {}", pagingRequest);
@@ -71,7 +67,7 @@ public class UserController {
 
     @Operation(summary = "Update information of current authenticated account")
     @PatchMapping("/details")
-    public ResponseEntity<?> updateUserInfo(UpdateUserDTO dto) {
+    public ResponseEntity<BaseResponse<UserDTO>> updateUserInfo(@RequestBody @Valid UpdateUserDTO dto) {
         return ResponseEntity.ok(userService.updateCurrentUser(dto));
     }
 

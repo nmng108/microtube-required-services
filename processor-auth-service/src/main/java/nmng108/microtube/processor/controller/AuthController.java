@@ -113,7 +113,7 @@ public class AuthController {
         sdf.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, STR."token=\{accessToken}; \{sdf.format(expirationDate)}; Path=/api; SameSite=None; Secure; HttpOnly")
+                .header(HttpHeaders.SET_COOKIE, STR."token=\{accessToken}; Expires=\{sdf.format(expirationDate)}; Path=/api; SameSite=None; Secure; HttpOnly")
                 .body(BaseResponse.succeeded(response));
     }
 
@@ -135,8 +135,15 @@ public class AuthController {
         sdf.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, STR."token=\{accessToken}; \{sdf.format(expirationDate)}; Path=/api; SameSite=None; Secure; HttpOnly")
+                .header(HttpHeaders.SET_COOKIE, STR."token=\{accessToken}; Expires=\{sdf.format(expirationDate)}; Path=/api; SameSite=None; Secure; HttpOnly")
                 .body(BaseResponse.succeeded(response));
+    }
+
+    @GetMapping(Routes.Auth.logout)
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, STR."token=; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Path=/api; SameSite=None; Secure; HttpOnly")
+                .build();
     }
 
     @PostMapping(Routes.Auth.forgot)

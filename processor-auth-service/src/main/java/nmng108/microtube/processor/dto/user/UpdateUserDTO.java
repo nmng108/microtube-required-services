@@ -8,14 +8,14 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateUserDTO {
-    @NotBlank
+//    @NotBlank
     @Size(min = 6, max = 20)
     @Pattern(regexp = "^\\w+$")
     String username;
-    @NotNull
+//    @NotNull
     @Size(min = 6, max = 150)
     String password;
-    @NotNull
+//    @NotNull
     @Size(min = 6, max = 80)
     String name;
     @Email

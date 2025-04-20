@@ -95,19 +95,19 @@ public class UserServiceImpl implements UserService {
     public BaseResponse<UserDTO> updateCurrentUser(UpdateUserDTO dto) {
         return getCurrentUser()
                 .map((u) -> {
-                    Optional.ofNullable(u.getUsername())
+                    Optional.ofNullable(dto.getUsername())
                             .filter(StringUtils::hasText)
                             .filter((username) -> userRepository.findByUsername(username).isEmpty())
                             .ifPresent(u::setUsername);
-                    Optional.ofNullable(u.getPassword())
+                    Optional.ofNullable(dto.getPassword())
                             .filter(StringUtils::hasText)
                             .ifPresent((password) -> u.setPassword(passwordEncoder.encode(password)));
-                    Optional.ofNullable(u.getName()).filter(StringUtils::hasText).ifPresent(u::setName);
-                    Optional.ofNullable(u.getEmail())
+                    Optional.ofNullable(dto.getName()).filter(StringUtils::hasText).ifPresent(u::setName);
+                    Optional.ofNullable(dto.getEmail())
                             .filter(StringUtils::hasText)
                             .filter((email) -> userRepository.findByEmail(email).size() <= 3)
                             .ifPresent(u::setEmail);
-                    Optional.ofNullable(u.getPhoneNumber()).filter(StringUtils::hasText).ifPresent(u::setPhoneNumber);
+                    Optional.ofNullable(dto.getPhoneNumber()).filter(StringUtils::hasText).ifPresent(u::setPhoneNumber);
 
                     return userRepository.save(u);
                 })
