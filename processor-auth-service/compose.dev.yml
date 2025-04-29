@@ -17,12 +17,14 @@ services:
       args:
         GLOWROOT_COLLECTOR_ADDRESS: http://glowroot:8181
     container_name: microservice-processor-service
+    command:
+      - --eureka.instance.non-secure-port=${PUBLISHED_PORT:-8080}
     volumes:
       - ./logs:/opt/app/logs
       - ./tmp/:/opt/app/tmp
     networks:
       - microtube-network
-      - monitoring-network
+#      - monitoring-network
     ports:
       - ${PUBLISHED_PORT:-8080}:8080
 #      - name: actuator
@@ -38,11 +40,11 @@ services:
 #    depends_on:
 #      mysql.db:
 #        condition: service_healthy
-    healthcheck:
-      test: sh -c "curl -f http://localhost:8080${SERVER_CONTEXT_PATH-}/healthcheck"
-      interval: 20s
-      timeout: 10s
-      retries: 10
+#    healthcheck:
+#      test: sh -c "curl -f http://localhost:8080${SERVER_CONTEXT_PATH-}/healthcheck"
+#      interval: 20s
+#      timeout: 10s
+#      retries: 10
     develop:
       watch:
         - action: rebuild
@@ -53,8 +55,7 @@ services:
       SERVER_CONTEXT_PATH: ${SERVER_CONTEXT_PATH-}
       ACTUATOR_HOST: 0.0.0.0
       ACTUATOR_PORT: 8081
-      JWT_SECRET: ${JWT_SECRET-}
-#      LOGGING_CONFIG_FILEPATH=/app/config/logback-spring.xml
+      JWT_SECRET: ${JWT_SECRET-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
       # Storage configs
       MAIN_DB_URL: ${MAIN_DB_URL:-jdbc:mysql://mysql.db:3306/MICROTUBE}
       MAIN_DB_USERNAME: ${MAIN_DB_USERNAME:-dbuser}
@@ -66,10 +67,15 @@ services:
       OBJECT_STORE_BUCKET_HLS: ${OBJECT_STORE_BUCKET_HLS:-hls}
       OBJECT_STORE_BUCKET_AVATAR: ${OBJECT_STORE_BUCKET_AVATAR:-avatar}
       OBJECT_STORE_BUCKET_THUMBNAIL: ${OBJECT_STORE_BUCKET_THUMBNAIL:-thumbnail}
+      # Monitoring
+#      LOGGING_CONFIG_FILEPATH=/app/config/logback-spring.xml
       FLUENTD_HOST: ${FLUENTD_HOST:-fluentd}
       FLUENTD_PORT: ${FLUENTD_PORT:-24224}
       ENABLE_ZIPKIN: false
       ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
+      # Integration
+      SERVICE_REGISTRAR_URL: ${SERVICE_REGISTRAR_URL:-http://service-registrar:8761/eureka}
+      EUREKA_INSTANCE_HOSTNAME: ${EUREKA_INSTANCE_HOSTNAME:-processor-service}
 #    logging:
 #      driver: fluentd
 #      options:
@@ -90,5 +96,5 @@ networks:
   # Communicate with storage services
   microtube-network:
     name: microtube-network
-  monitoring-network:
-    name: monitoring-network
+#  monitoring-network:
+#    name: monitoring-network

@@ -9,9 +9,9 @@
 ################################################################################
 
 ARG GLOWROOT_COLLECTOR_ADDRESS="http://localhost:8181"
-
+ARG LIBC=musl
 # Create a stage for resolving and downloading dependencies.
-FROM eclipse-temurin:21-jdk-alpine-3.21 AS deps
+FROM bellsoft/liberica-runtime-container:jdk-21-crac-slim-$LIBC AS deps
 
 WORKDIR /build
 
@@ -55,38 +55,69 @@ FROM package AS extract
 
 WORKDIR /build
 
-RUN java -Djarmode=layertools -jar target/app.jar extract --destination target/extracted
+RUN java -Djarmode=tools -jar target/app.jar extract --destination extracted
 
 ################################################################################
 
-# Create a new stage for running the application in development (local) environment.
-
-FROM eclipse-temurin:21-jre-alpine-3.21 AS development
-RUN apk --update add ffmpeg && \
-    apk cache clean && rm -rf /var/cache/apk/*
-
+# Create a new stage for running the application in development/local environment.
+# alpine-temurin JRE is lighter than alpaquita-liberica JRE ~100MB
+FROM bellsoft/liberica-runtime-container:jre-21-crac-cds-slim-$LIBC AS development
 WORKDIR /opt/app
 
-COPY --from=extract /build/target/extracted/dependencies/ ./
-COPY --from=extract /build/target/extracted/spring-boot-loader/ ./
-COPY --from=extract /build/target/extracted/snapshot-dependencies/ ./
-COPY --from=extract /build/target/extracted/application/ ./
-COPY ./glowroot/ ./glowroot/
+#COPY ./glowroot/ ./glowroot/
+# Copy the "lib" directory & the executable jar file from the "extract" stage.
+COPY --from=extract build/extracted/lib/ ./lib/
+COPY --from=extract build/extracted/app.jar ./
 
 ARG GLOWROOT_COLLECTOR_ADDRESS
 ENV JAVA_TOOL_OPTIONS \
     --enable-preview \
-#    -Xms512m -Xmx1536m \
+#    -Xms512m -Xmx2g \
+    -Dspring.profiles.active=dev \
     # Enable debugger
     -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000
 #    -javaagent:glowroot/glowroot.jar \
 #    -Dglowroot.collector.address=$GLOWROOT_COLLECTOR_ADDRESS
 
 VOLUME /opt/app/logs/
-VOLUME /opt/app/tmp/
 EXPOSE 8080/tcp 8081/tcp 8000
 
-ENTRYPOINT [ "java", "-Dspring.profiles.active=dev", "org.springframework.boot.loader.launch.JarLauncher" ]
+#ENTRYPOINT sh
+ENTRYPOINT [ "java", "-jar", "./app.jar" ]
+
+################################################################################
+
+# Create a custom Java runtime
+FROM bellsoft/liberica-runtime-container:jdk-all-21-cds-slim-$LIBC AS custom-runtime
+
+WORKDIR /build
+
+#COPY --chmod=0755 mvnw mvnw
+#COPY .mvn/ .mvn/
+#RUN sed -i 's/\r$//' mvnw
+
+#RUN ./mvnw dependency:build-classpath | grep "\.jar" > ./classpaths.tmp
+#COPY --from=package /build/target/app.jar ./
+#COPY --from=extract /build/target/extracted/dependencies/ ./
+#RUN rm -f ./BOOT-INF/lib/okio-3.6.0.jar
+#RUN $JAVA_HOME/bin/jdeps \
+#      --print-module-deps --ignore-missing-deps \
+#      --class-path "$(cat ./classpaths.tmp)" \
+#      --module-path ./BOOT-INF/lib \
+#      --recursive --multi-release 21 \
+#      ./app.jar \
+##    | awk -v RS=',' '/^java\./ {print $0}' \
+##    | awk -F " " '{ printf "%s%s", (NR==1 ? "" : ","), $0 }' \
+#    > ./jmodules.tmp
+# Despite including all (21) jdk modules, the result image is still 100MB smaller than eclipse-temurin:21-jre-alpine-3.21
+RUN $JAVA_HOME/bin/jlink \
+      --add-modules ALL-MODULE-PATH \
+#      --add-modules $(cat ./jmodules.tmp) \
+      --strip-debug \
+      --no-man-pages \
+      --no-header-files \
+      --compress zip-3 \
+      --output /javaruntime/
 
 ################################################################################
 
@@ -94,7 +125,12 @@ ENTRYPOINT [ "java", "-Dspring.profiles.active=dev", "org.springframework.boot.l
 # runtime dependencies for the application. This often uses a different base
 # image from the install or build stage where the necessary files are copied
 # from the install stage.
-FROM eclipse-temurin:21-jre-jammy AS production
+# Larger than alpine image in uncompressed size
+FROM bellsoft/alpaquita-linux-base:$LIBC AS production
+# Copy custom JRE into this final image
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="$JAVA_HOME/bin:$PATH"
+COPY --from=custom-runtime /javaruntime/ $JAVA_HOME
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
@@ -107,31 +143,28 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
-RUN mkdir -p /opt/app/logs && chown -R appuser /opt/app/logs
-USER appuser
+RUN mkdir -p /opt/app/logs && chown -R appuser /opt/app
 
+USER appuser
 WORKDIR /opt/app
 
-# Copy the executable from the "package" stage.
-COPY --from=extract build/target/extracted/dependencies/ ./
-COPY --from=extract build/target/extracted/spring-boot-loader/ ./
-COPY --from=extract build/target/extracted/snapshot-dependencies/ ./
-COPY --from=extract build/target/extracted/application/ ./
-COPY glowroot/ glowroot/
+#COPY ./glowroot/ ./glowroot/
+# Copy lib directory & the executable jar file from the "extract" stage.
+COPY --from=extract build/extracted/lib/ ./lib/
+COPY --from=extract build/extracted/app.jar ./
 
 ENV SPRING_PROFILES_ACTIVE=prod
-ARG GLOWROOT_COLLECTOR_ADDRESS
+ARG GLOWROOT_COLLECTOR_ADDRESS=http://glowroot:8181
 ENV JAVA_TOOL_OPTIONS \
     --enable-preview \
-    -Xms512m -Xmx3g
+    -Xms512m -Xmx2g
 #    -javaagent:glowroot/glowroot.jar \
 #    -Dglowroot.collector.address=$GLOWROOT_COLLECTOR_ADDRESS
 
 VOLUME /opt/app/logs/
-VOLUME /opt/app/tmp/
 EXPOSE 8080/tcp 8081/tcp
 
-ENTRYPOINT [ "java", "org.springframework.boot.loader.launch.JarLauncher" ]
+ENTRYPOINT [ "java", "-jar", "./app.jar" ]
 # - If using external config files (application[-<profile>].yml, bootstrap.yml)
 # and those files are placed in a directory other than working dir ("./") or in "./config/" dir, add this option (mostly in production env):
 #       "--spring.config.location=file:./,optional:file:./config/"

@@ -47,7 +47,17 @@ application:
 eureka:
   client:
     service-url:
-      defaultZone: ${SERVICE_REGISTRAR_URL:http://localhost:8761/eureka/}
+      defaultZone: ${SERVICE_REGISTRAR_URL:http://localhost:8761/eureka}
+  instance:
+    appname: Processor-Auth service # Just a representational name, not used for routing/load balancing
+    #    prefer-ip-address: true
+    #    ip-address: ${EUREKA_INSTANCE_IPADDR:127.0.0.1}
+    # Accept both hostname & IP address, so setting the 2 above props is unnecessary.
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:127.0.0.1}
+    # If port is required to be specified, pass these props as program arguments.
+    # If not specified, the server's port will be used by default.
+#    secure-port-enabled: true
+#    secure-port:
 
 springdoc:
   swagger-ui:

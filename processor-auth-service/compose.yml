@@ -1,13 +1,14 @@
 name: microtube
 services:
-  server:
-    image: ${BACKEND_IMAGE:-registry.local/microtube/video-processing-service:latest}
+  processor-service:
+    image: ${PROCESSOR_SERVICE_IMAGE:-registry.local/microtube/processor-service:latest}
+    command:
+      - --eureka.instance.non-secure-port=${PUBLISHED_PORT:-8080}
     volumes:
       - ./log:/opt/app/logs
       - ./tmp/:/opt/app/tmp
     networks:
-      - default
-      - logging-network
+      - microtube-network
     ports:
       - ${PUBLISHED_PORT:-8080}:8080
       - name: actuator
@@ -29,7 +30,6 @@ services:
       SERVER_CONTEXT_PATH: ${SERVER_CONTEXT_PATH-}
       ACTUATOR_HOST: 0.0.0.0
       ACTUATOR_PORT: 8081
-#      LOGGING_CONFIG_FILEPATH=/app/config/logback-spring.xml
       JWT_SECRET: {JWT_SECRET-}
       # Database configs (may put this to .env file)
       MAIN_DB_URL: ${MAIN_DATABASE_URL:-jdbc:mysql://mysql.db:3306/MICROTUBE}
@@ -42,10 +42,15 @@ services:
       OBJECT_STORE_BUCKET_HLS: ${OBJECT_STORE_BUCKET_HLS:-hls}
       OBJECT_STORE_BUCKET_AVATAR: ${OBJECT_STORE_BUCKET_AVATAR:-avatar}
       OBJECT_STORE_BUCKET_THUMBNAIL: ${OBJECT_STORE_BUCKET_THUMBNAIL:-thumbnail}
+      # Monitoring
+#      LOGGING_CONFIG_FILEPATH=/app/config/logback-spring.xml
       FLUENTD_HOST: ${FLUENTD_HOST:-fluentd}
       FLUENTD_PORT: ${FLUENTD_PORT:-24224}
       ENABLE_ZIPKIN: false
       ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://127.0.0.1:9411/api/v2/spans}
+      # Integration
+      SERVICE_REGISTRAR_URL: ${SERVICE_REGISTRAR_URL:-http://service-registrar:8761/eureka}
+      EUREKA_INSTANCE_HOSTNAME: ${EUREKA_INSTANCE_HOSTNAME:-processor-service}
 #    logging:
 #      driver: fluentd
 #      options:
@@ -63,7 +68,8 @@ volumes:
     driver: local
 
 networks:
-  default:
+  microtube-network:
+    name: microtube-network
 
 #  secrets:
 #    db-password:

@@ -34,7 +34,7 @@ public class CorsHandlingWebFilter implements WebFilter {
             // These 3 headers is only read in pre-flight response
             if (CorsUtils.isPreFlightRequest(request)) {
                 if (request.getHeaders().getAccessControlRequestMethod() != null) {
-                    response.getHeaders().setAccessControlAllowMethods(List.of(request.getHeaders().getAccessControlRequestMethod())); // not correct but still works?
+                    response.getHeaders().setAccessControlAllowMethods(List.of(request.getHeaders().getAccessControlRequestMethod()));
                 }
 
                 // Respond to the ACCESS_CONTROL_REQUEST_HEADERS header

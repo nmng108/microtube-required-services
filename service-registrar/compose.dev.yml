@@ -1,0 +1,64 @@
+name: microtube
+services:
+  service-registrar:
+    build:
+      context: .
+#      dockerfile:
+      target: production
+      args:
+        GLOWROOT_COLLECTOR_ADDRESS: http://glowroot:8181
+    container_name: microtube-service-registrar
+    volumes:
+      - ./logs/:/opt/app/logs/
+    networks:
+      - microtube-network
+#      - monitoring-network
+    ports:
+      - ${PUBLISHED_PORT:-8761}:8761
+#      - name: actuator
+#        host_ip: 127.0.0.1
+#        target: 8081
+#        published: ${ACTUATOR_PORT:-8801}
+#        app_protocol: http
+#    healthcheck:
+#      test: sh -c "curl -f http://localhost:8080${SERVER_BASE_PATH-}/healthcheck"
+#      interval: 20s
+#      timeout: 10s
+#      retries: 10
+#    develop:
+#      watch:
+#        - action: rebuild
+#          path: .
+    environment:
+      # Application configs
+      SPRING_ACTIVES_PROFILE: dev
+#      SERVER_BASE_PATH: ${SERVER_BASE_PATH-}
+#      ACTUATOR_HOST: 0.0.0.0
+#      ACTUATOR_PORT: 8081
+      SERVICE_REGISTRAR_URL: ${SERVICE_REGISTRAR_URL:-http://service-registrar:8761/eureka}
+#      LOGGING_CONFIG_FILEPATH=/app/config/logback-spring.xml
+#      FLUENTD_HOST: ${FLUENTD_HOST:-fluentd}
+#      FLUENTD_PORT: ${FLUENTD_PORT:-24224}
+#      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT:-http://zipkin:9411/api/v2/spans}
+#    logging:
+#      driver: fluentd
+#      options:
+#        fluentd-address: ${FLUENTD_ADDRESS:-localhost:24224}
+#        tag: "{{.ImageName}}"
+#        fluentd-async:
+##        fluentd-async-reconnect-interval: 2s
+#        fluentd-buffer-limit: 524288
+##        fluentd-retry-wait: 1
+##        fluentd-max-retries: 4294967295
+#        fluentd-sub-second-precision:
+
+#volumes:
+#  server-log:
+#    driver: local
+
+networks:
+  # Communicate with other services
+  microtube-network:
+    name: microtube-network
+#  monitoring-network:
+#    name: monitoring-network
